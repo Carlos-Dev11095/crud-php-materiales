@@ -2,6 +2,24 @@
 include('config/conexion.php');
 
 $mensaje = ''; 
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    
+    $nombre = $conn->real_escape_string($_POST['nombre']);
+    $unidad = $conn->real_escape_string($_POST['unidad_medida']);
+    $precio = (float)$_POST['precio'];
+    $stock = (int)$_POST['stock'];
+    
+    $sql = "INSERT INTO materiales (nombre, unidad_medida, precio, stock) 
+            VALUES ('$nombre', '$unidad', $precio, $stock)";
+
+    if ($conn->query($sql) === TRUE) {
+        header("Location: index.php?msg=creado"); 
+        exit();
+    } else {
+        $mensaje = "Error al agregar material: " . $conn->error;
+    }
+}
 ?>
 
 <!DOCTYPE html>
