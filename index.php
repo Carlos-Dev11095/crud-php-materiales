@@ -1,58 +1,59 @@
 <?php
+// Incluye el archivo de conexión
 include('config/conexion.php');
 
-// 1. Obtener el término de búsqueda
-// Usa el operador de fusión null (??) para obtener el valor o una cadena vacía si no existe
-$busqueda = $_GET['nombre'] ?? ''; 
+$busqueda = $_GET['nombre'] ?? ''; // Obtener término de búsqueda (si existe)
+$mensaje = $_GET['msg'] ?? '';    // Obtener mensaje de estado
 
-// 2. Consulta SQL base
-$sql = "SELECT id, nombre, unidad_medida, precio, stock, (precio * stock) AS total_producto FROM materiales";
+// Consulta SQL con filtro de búsqueda
+$sql = "SELECT id, nombre, unidad_medida, precio, stock, (precio * stock) AS total_producto 
+        FROM materiales";
 
-// 3. Modificar la consulta si hay un término de búsqueda
 if (!empty($busqueda)) {
-    // Usamos LIKE y % para buscar coincidencias parciales
-    // Utilizamos real_escape_string para evitar inyección SQL básica
+    // Usamos LIKE para buscar coincidencias parciales, y real_escape_string para seguridad
     $sql .= " WHERE nombre LIKE '%" . $conn->real_escape_string($busqueda) . "%'";
 }
 
-// 4. Ordenar los resultados
-$sql .= " ORDER BY id DESC";
+$sql .= " ORDER BY id DESC"; // Ordenar por ID descendente
 
-// Ejecutar la consulta
 $resultado = $conn->query($sql);
-
-$mensaje = $_GET['msg'] ?? ''; 
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <title>Catálogo de Materiales de Construcción</title>
+    <title>Listado de Materiales de Construcción</title>
     <style>
+        /* Estilos básicos para la prueba */
         body { font-family: sans-serif; margin: 20px; }
-        .buscador { margin-bottom: 20px; }
-        table { width: 90%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .message-success { color: green; font-weight: bold; }
+        .message-error { color: red; font-weight: bold; }
+        .search-form { margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h1>Catálogo de Materiales</h1>
+    <h1>Catálogo de Materiales de Construcción</h1>
     
     <?php if ($mensaje == 'creado'): ?>
-        <p style="color: green;">✅ Material agregado exitosamente.</p>
+        <p class="message-success">✅ Material agregado exitosamente.</p>
+    <?php elseif ($mensaje == 'eliminado'): ?>
+        <p class="message-success">🗑️ Material eliminado exitosamente.</p>
+    <?php elseif ($mensaje == 'modificado'): ?>
+        <p class="message-success">✏️ Material modificado exitosamente.</p>
+    <?php elseif ($mensaje == 'no_stock'): ?>
+        <p class="message-error">❌ ERROR: El material no puede ser eliminado. Aún tiene existencias.</p>
     <?php endif; ?>
 
-    <div class="buscador">
-        <form action="index.php" method="GET">
-            <input type="text" name="nombre" placeholder="Buscar material por nombre..." 
-                   value="<?= htmlspecialchars($busqueda) ?>">
-            <button type="submit">Buscar</button>
-            <?php if (!empty($busqueda)): ?>
-                <a href="index.php">Limpiar Búsqueda</a>
-            <?php endif; ?>
-        </form>
-    </div>
+    <form class="search-form" action="index.php" method="GET">
+        <input type="text" name="nombre" placeholder="Buscar por nombre..." value="<?= htmlspecialchars($busqueda) ?>">
+        <button type="submit">Buscar</button>
+        <?php if (!empty($busqueda)): ?>
+            <a href="index.php">Limpiar Búsqueda</a>
+        <?php endif; ?>
+    </form>
     
     <p><a href="crear.php">➕ Agregar Nuevo Material</a></p>
 
@@ -80,7 +81,10 @@ $mensaje = $_GET['msg'] ?? '';
                 <td>$<?= number_format($fila['total_producto'], 2) ?></td>
                 <td>
                     <a href="editar.php?id=<?= $fila['id'] ?>">Modificar</a> |
-                    <a href="eliminar.php?id=<?= $fila['id'] ?>" onclick="return confirm('¿Eliminar? Solo si Stock es 0.')">Eliminar</a>
+                    <a href="eliminar.php?id=<?= $fila['id'] ?>" 
+                       onclick="return confirm('¿Seguro que deseas eliminar? (SOLO si el stock es 0)')">
+                        Eliminar
+                    </a>
                 </td>
             </tr>
             <?php 
@@ -88,13 +92,7 @@ $mensaje = $_GET['msg'] ?? '';
             else: 
             ?>
             <tr>
-                <td colspan="6">
-                    <?php if (!empty($busqueda)): ?>
-                        No se encontraron materiales que coincidan con "<?= htmlspecialchars($busqueda) ?>".
-                    <?php else: ?>
-                        No hay materiales registrados.
-                    <?php endif; ?>
-                </td>
+                <td colspan="6">No se encontraron materiales.</td>
             </tr>
             <?php endif; ?>
         </tbody>
