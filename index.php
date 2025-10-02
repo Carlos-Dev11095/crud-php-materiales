@@ -31,6 +31,7 @@ $resultado = $conn->query($sql);
         th { background-color: #f2f2f2; }
         .message-success { color: green; font-weight: bold; }
         .message-error { color: red; font-weight: bold; }
+        .message-warning { color: orange; font-weight: bold; }
         .search-form { margin-bottom: 20px; }
     </style>
 </head>
@@ -44,7 +45,11 @@ $resultado = $conn->query($sql);
     <?php elseif ($mensaje == 'modificado'): ?>
         <p class="message-success">✏️ Material modificado exitosamente.</p>
     <?php elseif ($mensaje == 'no_stock'): ?>
-        <p class="message-error">❌ ERROR: El material no puede ser eliminado. Aún tiene existencias.</p>
+        <p class="message-error">❌ ERROR: El material no puede ser eliminado. Aún tiene existencias (Stock > 0).</p>
+    <?php elseif ($mensaje == 'db_error'): ?>
+        <p class="message-error">❌ ERROR: Ocurrió un problema de base de datos durante la operación.</p>
+    <?php elseif ($mensaje == 'not_found'): ?>
+        <p class="message-warning">⚠️ Advertencia: El registro solicitado no fue encontrado.</p>
     <?php endif; ?>
 
     <form class="search-form" action="index.php" method="GET">
