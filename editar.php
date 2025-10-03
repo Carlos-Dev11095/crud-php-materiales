@@ -25,15 +25,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 } 
 
-if (isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
+if (isset($_GET['id']) || ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id']))) {
+    $id = (int)($_GET['id'] ?? $_POST['id']);
     $sql_select = "SELECT * FROM materiales WHERE id = $id";
     $resultado = $conn->query($sql_select);
     
     if ($resultado->num_rows === 1) {
         $material = $resultado->fetch_assoc();
     } else {
-        header("Location: index.php?error=no_existe");
+        header("Location: index.php?msg=not_found"); // Cambié error=no_existe a msg=not_found para consistencia
         exit();
     }
 } else {
@@ -46,38 +46,43 @@ if (isset($_GET['id'])) {
 <html lang="es">
 <head>
     <title>Modificar Material</title>
-    </head>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
 <body>
-    <h1>✏️ Modificar Material: <?= htmlspecialchars($material['nombre']) ?></h1>
-    
-    <?php if (!empty($mensaje)): ?>
-        <p style="color: red;"><?= $mensaje ?></p>
-    <?php endif; ?>
-
-    <form action="editar.php" method="POST">
-        <input type="hidden" name="id" value="<?= $material['id'] ?>">
-
-        <div>
-            <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($material['nombre']) ?>" required>
-        </div>
-        <div>
-            <label for="unidad_medida">Unidad:</label>
-            <input type="text" id="unidad_medida" name="unidad_medida" value="<?= htmlspecialchars($material['unidad_medida']) ?>" required>
-        </div>
-        <div>
-            <label for="precio">Precio:</label>
-            <input type="number" id="precio" name="precio" step="0.01" min="0.01" value="<?= htmlspecialchars($material['precio']) ?>" required>
-        </div>
-        <div>
-            <label for="stock">Stock:</label>
-            <input type="number" id="stock" name="stock" min="0" value="<?= htmlspecialchars($material['stock']) ?>" required>
-        </div>
+    <div class="container">
+        <h1>Modificar Material: <?= htmlspecialchars($material['nombre']) ?></h1>
         
-        <button type="submit">Guardar Cambios</button>
-    </form>
-    
-    <p><a href="index.php">Volver al Catálogo</a></p>
+        <?php if (!empty($mensaje)): ?>
+            <p class="message-error"><?= $mensaje ?></p>
+        <?php endif; ?>
+
+        <form action="editar.php" method="POST">
+            <input type="hidden" name="id" value="<?= $material['id'] ?>">
+
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($material['nombre']) ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="unidad_medida">Unidad:</label>
+                <input type="text" id="unidad_medida" name="unidad_medida" value="<?= htmlspecialchars($material['unidad_medida']) ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="precio">Precio:</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0.01" value="<?= htmlspecialchars($material['precio']) ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="stock">Stock:</label>
+                <input type="number" id="stock" name="stock" min="0" value="<?= htmlspecialchars($material['stock']) ?>" required>
+            </div>
+            
+            <div class="acciones-formulario">
+                <button type="submit">Guardar Cambios</button>
+                <a href="index.php" class="btn-secundario">Volver al Catálogo</a>
+            </div>
+            </form>
+        
+        </div>
 </body>
 </html>
 <?php $conn->close(); ?>
